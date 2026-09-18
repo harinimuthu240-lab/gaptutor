@@ -1,7 +1,8 @@
 # GapTutor — Find what you're missing
 
 **Track:** AI for Learning — CodeMyFYP Hackathon
-**Live demo:** _add your deployed link here after Step 5_
+**Live demo:** https://gaptutor.vercel.app
+
 **Video walkthrough:** _add your pitch video link here_
 
 ## Problem

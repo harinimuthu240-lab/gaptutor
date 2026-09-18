@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GapTutor — Find what you're missing</title>
+<meta name="description" content="GapTutor diagnoses your exact concept gaps and fixes them with targeted micro-lessons." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0a0e17;
+    --bg-panel: #10151f;
+    --bg-panel-2: #141b28;
+    --line: #23293a;
+    --line-soft: #1a212f;
+    --ink: #e9edf5;
+    --ink-dim: #97a1b8;
+    --ink-faint: #5c6478;
+    --amber: #f5a623;
+    --amber-soft: rgba(245,166,35,0.12);
+    --mint: #34d6a8;
+    --mint-soft: rgba(52,214,168,0.12);
+    --red: #ef5b5b;
+    --red-soft: rgba(239,91,91,0.12);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1200px 600px at 15% -10%, rgba(245,166,35,0.06), transparent 60%),
+      radial-gradient(1000px 500px at 100% 0%, rgba(52,214,168,0.05), transparent 55%),
+      var(--bg);
+    color:var(--ink);
+    font-family:'Inter', system-ui, sans-serif;
+    min-height:100vh;
+    line-height:1.5;
+  }
+  .serif{ font-family:'Fraunces', serif; }
+  .mono{ font-family:'JetBrains Mono', monospace; }
+  a{color:inherit;}
+  button{font-family:inherit; cursor:pointer;}
+  ::selection{ background: var(--amber-soft); }
+
+  .wrap{ max-width:920px; margin:0 auto; padding:0 24px; }
+
+  /* ---------- Top bar ---------- */
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:22px 0; border-bottom:1px solid var(--line-soft);
+  }
+  .brand{ display:flex; align-items:center; gap:10px; }
+  .brand-mark{
+    width:34px;height:34px;border-radius:8px;
+    background:linear-gradient(155deg, var(--amber), #c97e12);
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 0 0 1px rgba(245,166,35,0.35), 0 6px 18px -6px rgba(245,166,35,0.5);
+    flex-shrink:0;
+  }
+  .brand-mark svg{ width:18px;height:18px; }
+  .brand-name{ font-family:'Fraunces', serif; font-size:19px; font-weight:600; letter-spacing:-0.01em; }
+  .brand-name em{ font-style:normal; color:var(--amber); }
+  .topbar-actions{ display:flex; align-items:center; gap:10px; }
+  .icon-btn{
+    width:36px;height:36px;border-radius:9px;
+    border:1px solid var(--line); background:var(--bg-panel);
+    color:var(--ink-dim); display:flex;align-items:center;justify-content:center;
+    transition: border-color .15s ease, color .15s ease;
+  }
+  .icon-btn:hover{ border-color:var(--amber); color:var(--amber); }
+
+  /* ---------- Generic panel ---------- */
+  .panel{
+    background:var(--bg-panel);
+    border:1px solid var(--line);
+    border-radius:14px;
+  }
+  .screen{ padding:48px 0 80px; animation: fadeUp .35s ease both; }
+  @keyframes fadeUp{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;} }
+  @media (prefers-reduced-motion: reduce){ .screen{animation:none;} }
+
+  /* ---------- Landing / Setup ---------- */
+  .hero-eyebrow{
+    display:inline-flex; align-items:center; gap:8px;
+    font-size:12.5px; color:var(--amber); letter-spacing:0.02em;
+    background:var(--amber-soft); border:1px solid rgba(245,166,35,0.3);
+    padding:6px 12px; border-radius:100px; margin-bottom:22px;
+  }
+  h1.hero{
+    font-family:'Fraunces', serif; font-weight:600; letter-spacing:-0.02em;
+    font-size:clamp(32px, 5vw, 50px); line-height:1.08; margin:0 0 18px;
+    max-width:14ch;
+  }
+  h1.hero i{ font-style:italic; color:var(--amber); font-weight:500; }
+  .hero-sub{ color:var(--ink-dim); font-size:17px; max-width:52ch; margin:0 0 36px; }
+
+  .setup-card{ padding:28px; }
+  .field-label{ font-size:13px; color:var(--ink-dim); margin-bottom:8px; display:block; }
+  textarea, input[type=text], input[type=password]{
+    width:100%; background:var(--bg-panel-2); border:1px solid var(--line);
+    color:var(--ink); border-radius:10px; padding:13px 14px; font-size:15px;
+    font-family:inherit; resize:vertical;
+    transition:border-color .15s ease;
+  }
+  textarea:focus, input:focus{ outline:none; border-color:var(--amber); }
+  textarea::placeholder, input::placeholder{ color:var(--ink-faint); }
+
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    padding:13px 22px; border-radius:10px; font-size:15px; font-weight:600;
+    border:1px solid transparent; transition: transform .12s ease, filter .12s ease, background .12s ease;
+    white-space:nowrap;
+  }
+  .btn:active{ transform:scale(0.98); }
+  .btn-primary{ background:var(--amber); color:#1a1305; }
+  .btn-primary:hover{ filter:brightness(1.08); }
+  .btn-primary:disabled{ opacity:0.5; cursor:not-allowed; filter:none; }
+  .btn-ghost{ background:transparent; border-color:var(--line); color:var(--ink); }
+  .btn-ghost:hover{ border-color:var(--ink-dim); }
+  .btn-block{ width:100%; }
+  .btn-row{ display:flex; gap:12px; margin-top:18px; flex-wrap:wrap; }
+
+  .samples{ display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; }
+  .sample-chip{
+    font-size:13px; color:var(--ink-dim); background:var(--bg-panel-2);
+    border:1px solid var(--line); padding:7px 12px; border-radius:100px;
+    transition:border-color .15s ease, color .15s ease;
+  }
+  .sample-chip:hover{ border-color:var(--amber); color:var(--ink); }
+
+  .how-strip{ display:flex; gap:0; margin-top:56px; border-top:1px solid var(--line-soft); padding-top:28px; }
+  .how-step{ flex:1; padding-right:20px; }
+  .how-num{ font-family:'JetBrains Mono', monospace; font-size:12px; color:var(--amber); margin-bottom:8px; }
+  .how-title{ font-size:15px; font-weight:600; margin-bottom:4px; }
+  .how-desc{ font-size:13.5px; color:var(--ink-faint); }
+  @media (max-width:680px){ .how-strip{ flex-direction:column; gap:20px; } }
+
+  /* ---------- Key modal ---------- */
+  .modal-backdrop{
+    position:fixed; inset:0; background:rgba(5,7,12,0.7); backdrop-filter:blur(3px);
+    display:flex; align-items:center; justify-content:center; z-index:50; padding:20px;
+  }
+  .modal{ background:var(--bg-panel); border:1px solid var(--line); border-radius:16px; padding:28px; max-width:440px; width:100%; }
+  .modal h3{ font-family:'Fraunces', serif; font-size:21px; margin:0 0 10px; }
+  .modal p{ color:var(--ink-dim); font-size:14px; margin:0 0 18px; }
+  .modal a{ color:var(--amber); text-decoration:underline; }
+
+  /* ---------- Loading ---------- */
+  .loading-block{ display:flex; flex-direction:column; align-items:center; justify-content:center; padding:100px 20px; text-align:center; }
+  .spinner{
+    width:38px;height:38px;border-radius:50%;
+    border:3px solid var(--line); border-top-color:var(--amber);
+    animation:spin 0.8s linear infinite; margin-bottom:20px;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .loading-text{ color:var(--ink-dim); font-size:14.5px; }
+
+  /* ---------- Error ---------- */
+  .error-box{
+    background:var(--red-soft); border:1px solid rgba(239,91,91,0.35);
+    border-radius:12px; padding:16px 18px; color:#ffb4b4; font-size:14px;
+    display:flex; align-items:flex-start; gap:10px; margin:18px 0;
+  }
+  .error-box strong{ color:#ffdada; }
+
+  /* ---------- Quiz ---------- */
+  .quiz-progress{ display:flex; align-items:center; gap:14px; margin-bottom:32px; }
+  .quiz-progress-bar{ flex:1; height:6px; border-radius:100px; background:var(--line-soft); overflow:hidden; }
+  .quiz-progress-fill{ height:100%; background:var(--amber); border-radius:100px; transition:width .3s ease; }
+  .quiz-progress-label{ font-family:'JetBrains Mono', monospace; font-size:12.5px; color:var(--ink-faint); white-space:nowrap; }
+  .q-tag{ font-size:12px; color:var(--amber); text-transform:none; letter-spacing:0.01em; margin-bottom:10px; }
+  .q-text{ font-family:'Fraunces', serif; font-size:24px; font-weight:500; line-height:1.35; margin:0 0 28px; }
+  .options{ display:flex; flex-direction:column; gap:10px; }
+  .option{
+    display:flex; align-items:center; gap:14px; text-align:left;
+    padding:16px 18px; border-radius:12px; border:1px solid var(--line);
+    background:var(--bg-panel-2); color:var(--ink); font-size:15px;
+    transition: border-color .15s ease, background .15s ease;
+  }
+  .option:hover{ border-color:var(--ink-dim); }
+  .option.selected{ border-color:var(--amber); background:var(--amber-soft); }
+  .option.correct{ border-color:var(--mint); background:var(--mint-soft); }
+  .option.incorrect{ border-color:var(--red); background:var(--red-soft); }
+  .option-letter{
+    width:26px;height:26px;border-radius:7px;background:var(--bg);
+    border:1px solid var(--line); display:flex;align-items:center;justify-content:center;
+    font-family:'JetBrains Mono', monospace; font-size:12px; color:var(--ink-faint); flex-shrink:0;
+  }
+  .explain-box{
+    margin-top:18px; padding:16px 18px; border-radius:12px;
+    background:var(--bg-panel-2); border:1px solid var(--line); font-size:14px; color:var(--ink-dim);
+  }
+  .explain-box strong{ color:var(--ink); }
+
+  /* ---------- Gap map ---------- */
+  .mastery-ring-wrap{ display:flex; justify-content:center; margin:8px 0 8px; }
+  .mastery-summary{ text-align:center; padding:36px 0 44px; border-bottom:1px solid var(--line-soft); margin-bottom:36px; }
+  .mastery-topic{ color:var(--ink-faint); font-size:13.5px; margin-bottom:4px; }
+  .mastery-big{ font-family:'Fraunces', serif; font-size:52px; font-weight:600; margin:6px 0; }
+  .mastery-big span{ font-size:22px; color:var(--ink-faint); font-weight:400; }
+  .mastery-caption{ color:var(--ink-dim); font-size:14px; }
+
+  .gap-list{ display:flex; flex-direction:column; gap:12px; }
+  .gap-card{
+    padding:20px 22px; border-radius:12px; border:1px solid var(--line);
+    background:var(--bg-panel-2);
+  }
+  .gap-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
+  .gap-name{ font-weight:600; font-size:15.5px; display:flex; align-items:center; gap:9px; }
+  .gap-dot{ width:8px;height:8px;border-radius:50%; flex-shrink:0; }
+  .gap-dot.low{ background:var(--red); }
+  .gap-dot.mid{ background:var(--amber); }
+  .gap-dot.high{ background:var(--mint); }
+  .gap-pct{ font-family:'JetBrains Mono', monospace; font-size:13px; color:var(--ink-faint); }
+  .gap-bar{ height:6px; border-radius:100px; background:var(--line-soft); overflow:hidden; margin-bottom:10px; }
+  .gap-bar-fill{ height:100%; border-radius:100px; transition:width .6s cubic-bezier(.2,.8,.2,1); }
+  .gap-bar-fill.low{ background:var(--red); }
+  .gap-bar-fill.mid{ background:var(--amber); }
+  .gap-bar-fill.high{ background:var(--mint); }
+  .gap-meta{ font-size:13px; color:var(--ink-faint); margin-bottom:14px; }
+  .gap-actions{ display:flex; gap:10px; }
+  .btn-sm{ padding:9px 16px; font-size:13.5px; border-radius:8px; }
+
+  /* ---------- Lesson ---------- */
+  .lesson-kicker{ font-size:13px; color:var(--amber); margin-bottom:10px; }
+  .lesson-title{ font-family:'Fraunces', serif; font-size:28px; font-weight:600; margin:0 0 24px; line-height:1.25; }
+  .lesson-block{ margin-bottom:26px; }
+  .lesson-block-label{ font-size:12px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:8px; }
+  .lesson-block-body{ font-size:15.5px; color:var(--ink); line-height:1.65; }
+  .lesson-analogy{
+    padding:18px 20px; border-radius:12px; background:var(--amber-soft);
+    border:1px solid rgba(245,166,35,0.3); font-size:15px; font-style:italic;
+    font-family:'Fraunces', serif; color:#ffd9a0;
+  }
+  .lesson-trap{
+    padding:14px 18px; border-radius:10px; background:var(--red-soft);
+    border:1px solid rgba(239,91,91,0.3); font-size:14px; color:#ffc2c2;
+  }
+
+  /* ---------- Dashboard / footer nav ---------- */
+  .dash-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:32px; }
+  .dash-stat{ padding:20px; border-radius:12px; background:var(--bg-panel-2); border:1px solid var(--line); }
+  .dash-stat-num{ font-family:'Fraunces', serif; font-size:30px; font-weight:600; }
+  .dash-stat-label{ font-size:12.5px; color:var(--ink-faint); margin-top:4px; }
+  @media (max-width:600px){ .dash-grid{ grid-template-columns:1fr 1fr; } }
+
+  .skel{ background:linear-gradient(100deg, var(--bg-panel-2) 30%, #1c2434 50%, var(--bg-panel-2) 70%); background-size:200% 100%; animation:shimmer 1.4s ease infinite; border-radius:10px; }
+  @keyframes shimmer{ to{ background-position:-200% 0; } }
+
+  .top-nav-link{ font-size:13.5px; color:var(--ink-dim); display:flex; align-items:center; gap:6px; }
+  .top-nav-link:hover{ color:var(--ink); }
+
+  footer{ text-align:center; padding:40px 0 20px; color:var(--ink-faint); font-size:12.5px; }
+
+  /* Confetti */
+  .confetti-piece{ position:fixed; top:-10px; z-index:60; pointer-events:none; border-radius:2px; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 2 L21 7.5 L21 16.5 L12 22 L3 16.5 L3 7.5 Z" stroke="#1a1305" stroke-width="1.6" fill="none"/><circle cx="12" cy="12" r="3.2" fill="#1a1305"/></svg>
+      </div>
+      <div class="brand-name">Gap<em>Tutor</em></div>
+    </div>
+    <div class="topbar-actions">
+      <a href="#" id="navDashboard" class="top-nav-link" style="display:none; margin-right:6px;">Dashboard</a>
+      <button class="icon-btn" id="settingsBtn" title="API key settings">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div id="app"></div>
+
+  <footer>Built for the CodeMyFYP Hackathon — AI for Learning track.</footer>
+</div>
+
+<script>
+/* =========================================================
+   GapTutor — single-file app
+   Diagnoses a learner's exact sub-concept gaps and fixes
+   them with targeted, AI-generated micro-lessons.
+   ========================================================= */
+
+const GEMINI_MODEL = "gemini-2.0-flash";
+const STORAGE_KEY = "gaptutor_key";
+const PROGRESS_KEY = "gaptutor_progress";
+
+const app = document.getElementById("app");
+const settingsBtn = document.getElementById("settingsBtn");
+const navDashboard = document.getElementById("navDashboard");
+
+let state = {
+  screen: "setup",       // setup | quiz | gapmap | lesson | practiceResult | dashboard
+  topic: "",
+  quiz: null,             // { questions: [...] }
+  quizAnswers: [],        // per-question selected index
+  quizIndex: 0,
+  gaps: [],               // computed sub-concept mastery list
+  activeConcept: null,
+  lesson: null,
+  practiceQuiz: null,
+  practiceAnswers: [],
+  practiceIndex: 0,
+  isDemo: false,
+};
+
+/* ---------------- persistence ---------------- */
+function getKey(){ return localStorage.getItem(STORAGE_KEY) || ""; }
+function setKey(k){ localStorage.setItem(STORAGE_KEY, k); }
+
+function loadProgress(){
+  try{ return JSON.parse(localStorage.getItem(PROGRESS_KEY)) || { topics:{} }; }
+  catch(e){ return { topics:{} }; }
+}
+function saveProgress(p){ localStorage.setItem(PROGRESS_KEY, JSON.stringify(p)); }
+
+function recordGaps(topic, gaps){
+  const p = loadProgress();
+  p.topics[topic] = {
+    gaps, updatedAt: Date.now(),
+    overall: Math.round(gaps.reduce((a,g)=>a+g.mastery,0)/gaps.length)
+  };
+  saveProgress(p);
+}
+
+/* ---------------- gemini helper ---------------- */
+async function callGemini(prompt, {json=true} = {}){
+  const key = getKey();
+  if(!key){ throw {code:"NO_KEY", message:"No API key set."}; }
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${key}`;
+  const body = {
+    contents:[{ parts:[{ text: prompt }] }],
+    generationConfig: json ? { responseMimeType:"application/json", temperature:0.6 } : { temperature:0.7 }
+  };
+  let res;
+  try{
+    res = await fetch(url, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body) });
+  }catch(e){
+    throw {code:"NETWORK", message:"Could not reach Gemini. Check your connection."};
+  }
+  if(!res.ok){
+    let msg = `Gemini API error (${res.status}).`;
+    try{ const errJson = await res.json(); if(errJson?.error?.message) msg = errJson.error.message; }catch(e){}
+    throw {code:"API", message: msg};
+  }
+  const data = await res.json();
+  const text = data?.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("") || "";
+  if(!text) throw {code:"EMPTY", message:"Gemini returned an empty response. Try again."};
+  if(json){
+    try{ return JSON.parse(text); }
+    catch(e){
+      const match = text.match(/\{[\s\S]*\}/);
+      if(match){ try{ return JSON.parse(match[0]); }catch(e2){} }
+      throw {code:"PARSE", message:"Couldn't parse the AI's response. Try again."};
+    }
+  }
+  return text;
+}
+
+/* ---------------- demo data (no API needed) ---------------- */
+const DEMO_TOPIC = "DBMS — Normalization";
+const DEMO_QUIZ = {
+  questions: [
+    { id:"q1", subConcept:"1NF — Atomic Values", question:"Which of these violates First Normal Form (1NF)?", options:["A column storing a single phone number per row","A column storing a comma-separated list of phone numbers","A column with a NULL value","A table with a composite primary key"], correctIndex:1, explanation:"1NF requires every column to hold a single, atomic value — a list inside one cell breaks that." },
+    { id:"q2", subConcept:"1NF — Atomic Values", question:"A 'Repeating group' most directly violates which rule?", options:["Referential integrity","Atomicity of values","Functional dependency","Candidate key uniqueness"], correctIndex:1, explanation:"Repeating groups (e.g. Student1, Student2, Student3 columns) pack multiple values where one atomic value should be." },
+    { id:"q3", subConcept:"2NF — Partial Dependency", question:"2NF eliminates which kind of dependency?", options:["Transitive dependency on the whole key","Partial dependency on part of a composite key","Multivalued dependency","Dependency on a foreign key"], correctIndex:1, explanation:"2NF requires every non-key attribute to depend on the *whole* composite primary key, not just part of it." },
+    { id:"q4", subConcept:"2NF — Partial Dependency", question:"In {StudentID, CourseID} → Grade, {CourseID} → CourseName, what's the issue?", options:["No issue, this is already 2NF","CourseName partially depends on just CourseID, not the full key","Grade should be a foreign key","StudentID is redundant"], correctIndex:1, explanation:"CourseName depends only on CourseID (part of the composite key) — a classic partial dependency, so it should move to its own table." },
+    { id:"q5", subConcept:"3NF — Transitive Dependencies", question:"A transitive dependency looks like:", options:["A → B → C, where C depends on B, not directly on A's key","A → B and B → A","A composite key with two attributes","A NULL foreign key"], correctIndex:0, explanation:"Transitive dependency: a non-key attribute depends on another non-key attribute, rather than directly on the primary key." },
+    { id:"q6", subConcept:"3NF — Transitive Dependencies", question:"Storing 'ZipCode' and derived 'City' in the same Orders table (where ZipCode determines City) is a 3NF issue because:", options:["City is transitively dependent on the key, via ZipCode","ZipCode is not atomic","City has no functional dependency at all","This is actually fine in 3NF"], correctIndex:0, explanation:"OrderID → ZipCode → City means City depends transitively on OrderID through ZipCode — split it into a separate table." }
+  ]
+};
+const DEMO_ANSWERS = [1,0,1,0,0,1]; // pre-filled "demo" answers -> 1NF wrong x2, 2NF wrong x1, 3NF wrong x1
+const DEMO_LESSON = {
+  analogy: "Think of 1NF like a spice rack: each jar holds exactly one spice. The moment you cram three spices into one jar labeled 'mixed', you've broken the system — you can no longer ask for 'just the cumin'.",
+  explanation: "First Normal Form requires that every column in a table hold a single, indivisible (atomic) value, and that there are no repeating groups of columns. If a cell contains a list, or you find yourself adding Phone1, Phone2, Phone3 columns, the table isn't in 1NF yet — split that data into its own related table instead.",
+  workedExample: "Bad: Students(ID, Name, Phones='9876543210,9123456780')\nGood: Students(ID, Name)  +  StudentPhones(StudentID, Phone)\nNow each phone number is its own row — atomic, and easy to query.",
+  commonTrap: "Comma-separated values inside a single cell are the #1 giveaway of a 1NF violation — if you ever write a SQL query that has to SPLIT a column's text, that table almost certainly isn't in 1NF."
+};
+
+/* ---------------- prompts ---------------- */
+function diagnosticPrompt(topic){
+  return `You are an expert exam-setter. Generate a 6-question diagnostic quiz for the topic: "${topic}".
+Cover 3 distinct sub-concepts within this topic (2 questions per sub-concept), ordered from foundational to advanced.
+Each question must be multiple choice with exactly 4 options and one correct answer.
+Return ONLY valid JSON matching exactly this shape, no markdown fences, no commentary:
+{"questions":[{"id":"q1","subConcept":"short sub-concept name","question":"...","options":["...","...","...","..."],"correctIndex":0,"explanation":"one sentence why the correct answer is correct"}]}`;
+}
+
+function classifyPrompt(topic, wrongItems){
+  return `A student studying "${topic}" answered these questions incorrectly. For each, classify the mistake.
+Questions and their answers:
+${wrongItems.map((w,i)=>`${i+1}. Sub-concept: ${w.subConcept}\nQuestion: ${w.question}\nCorrect answer: ${w.options[w.correctIndex]}\nStudent picked: ${w.options[w.picked]}`).join("\n\n")}
+Return ONLY valid JSON, no markdown fences:
+{"classifications":[{"subConcept":"...","errorType":"conceptual misunderstanding | careless error | missing prerequisite","rootCause":"one short sentence","prerequisiteMissing":"name of prerequisite concept, or null"}]}`;
+}
+
+function lessonPrompt(topic, subConcept){
+  return `Write a micro-lesson for a student who is weak in "${subConcept}" within the topic "${topic}".
+Return ONLY valid JSON, no markdown fences:
+{"analogy":"a vivid 1-2 sentence analogy explaining the core idea","explanation":"a clear 3-4 sentence explanation of the concept","workedExample":"one short concrete worked example, plain text, may use newlines","commonTrap":"one sentence describing the most common mistake students make with this concept"}`;
+}
+
+function practicePrompt(topic, subConcept){
+  return `Generate 3 multiple-choice practice questions on "${subConcept}" within "${topic}", increasing in difficulty (easy, medium, hard).
+Return ONLY valid JSON, no markdown fences:
+{"questions":[{"id":"p1","subConcept":"${subConcept}","question":"...","options":["...","...","...","..."],"correctIndex":0,"explanation":"..."}]}`;
+}
+
+/* ---------------- gap computation ---------------- */
+function computeGaps(questions, answers){
+  const bySubConcept = {};
+  questions.forEach((q,i)=>{
+    const sc = q.subConcept;
+    if(!bySubConcept[sc]) bySubConcept[sc] = { correct:0, total:0, wrongItems:[] };
+    bySubConcept[sc].total++;
+    if(answers[i] === q.correctIndex){ bySubConcept[sc].correct++; }
+    else{ bySubConcept[sc].wrongItems.push({...q, picked:answers[i]}); }
+  });
+  return Object.entries(bySubConcept).map(([subConcept, v])=>({
+    subConcept,
+    correct: v.correct,
+    total: v.total,
+    mastery: Math.round((v.correct / v.total) * 100),
+    wrongItems: v.wrongItems,
+    errorType: null,
+    prerequisiteMissing: null,
+  })).sort((a,b)=>a.mastery-b.mastery);
+}
+
+/* ================= RENDER FUNCTIONS ================= */
+
+function render(){
+  navDashboard.style.display = Object.keys(loadProgress().topics).length ? "flex" : "none";
+  if(state.screen==="setup") renderSetup();
+  else if(state.screen==="loadingQuiz") renderLoading("Building your diagnostic quiz…");
+  else if(state.screen==="quiz") renderQuiz();
+  else if(state.screen==="loadingGaps") renderLoading("Scoring answers and mapping your gaps…");
+  else if(state.screen==="gapmap") renderGapMap();
+  else if(state.screen==="loadingLesson") renderLoading("Writing a micro-lesson for this gap…");
+  else if(state.screen==="lesson") renderLesson();
+  else if(state.screen==="loadingPractice") renderLoading("Generating fresh practice questions…");
+  else if(state.screen==="practice") renderPractice();
+  else if(state.screen==="practiceResult") renderPracticeResult();
+  else if(state.screen==="dashboard") renderDashboard();
+}
+
+function renderLoading(text){
+  app.innerHTML = `
+    <div class="screen">
+      <div class="loading-block">
+        <div class="spinner"></div>
+        <div class="loading-text">${text}</div>
+      </div>
+    </div>`;
+}
+
+function renderSetup(){
+  const hasKey = !!getKey();
+  app.innerHTML = `
+    <div class="screen">
+      <span class="hero-eyebrow">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/></svg>
+        AI-powered gap diagnosis
+      </span>
+      <h1 class="hero">Stop studying <i>everything.</i><br/>Fix what you're missing.</h1>
+      <p class="hero-sub">GapTutor runs a short diagnostic, finds the exact sub-concepts you haven't mastered, then writes a micro-lesson and fresh practice for each one — until every gap closes.</p>
+
+      <div class="panel setup-card">
+        <label class="field-label" for="topicInput">What are you studying?</label>
+        <textarea id="topicInput" rows="2" placeholder="e.g. DBMS — Normalization, Photosynthesis, Newton's Laws of Motion…">${state.topic}</textarea>
+        <div class="samples">
+          <button class="sample-chip" data-sample="DBMS — Normalization">DBMS — Normalization</button>
+          <button class="sample-chip" data-sample="Photosynthesis">Photosynthesis</button>
+          <button class="sample-chip" data-sample="Newton's Laws of Motion">Newton's Laws of Motion</button>
+          <button class="sample-chip" data-sample="Time Complexity & Big-O">Time Complexity &amp; Big-O</button>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="startBtn">Run Diagnostic →</button>
+          <button class="btn btn-ghost" id="demoBtn">Try Demo Mode</button>
+        </div>
+        ${!hasKey ? `<div style="margin-top:14px; font-size:13px; color:var(--ink-faint);">No API key set yet — click the ⚙ icon top-right, or use Demo Mode to preview instantly.</div>` : ``}
+      </div>
+
+      <div class="how-strip">
+        <div class="how-step"><div class="how-num">STEP 1</div><div class="how-title">Diagnose</div><div class="how-desc">A 6-question quiz finds your exact gaps.</div></div>
+        <div class="how-step"><div class="how-num">STEP 2</div><div class="how-title">Visualize</div><div class="how-desc">See a mastery-scored gap map.</div></div>
+        <div class="how-step"><div class="how-num">STEP 3</div><div class="how-title">Fix</div><div class="how-desc">A micro-lesson + practice for each gap.</div></div>
+      </div>
+    </div>`;
+
+  document.getElementById("topicInput").addEventListener("input", e=>{ state.topic = e.target.value; });
+  document.querySelectorAll(".sample-chip").forEach(chip=>{
+    chip.addEventListener("click", ()=>{
+      state.topic = chip.dataset.sample;
+      document.getElementById("topicInput").value = state.topic;
+    });
+  });
+  document.getElementById("demoBtn").addEventListener("click", startDemo);
+  document.getElementById("startBtn").addEventListener("click", startDiagnostic);
+}
+
+async function startDemo(){
+  state.isDemo = true;
+  state.topic = DEMO_TOPIC;
+  state.quiz = DEMO_QUIZ;
+  state.quizAnswers = DEMO_ANSWERS;
+  const gaps = computeGaps(DEMO_QUIZ.questions, DEMO_ANSWERS);
+  gaps.forEach(g=>{
+    if(g.subConcept.startsWith("1NF")){ g.errorType="missing prerequisite"; g.prerequisiteMissing="Attribute atomicity"; }
+    else if(g.subConcept.startsWith("2NF")){ g.errorType="conceptual misunderstanding"; g.prerequisiteMissing=null; }
+    else { g.errorType="conceptual misunderstanding"; g.prerequisiteMissing=null; }
+  });
+  state.gaps = gaps;
+  recordGaps(state.topic, gaps);
+  state.screen = "gapmap";
+  render();
+}
+
+async function startDiagnostic(){
+  const topic = state.topic.trim();
+  if(!topic){ document.getElementById("topicInput").focus(); return; }
+  if(!getKey()){ openSettingsModal("You need a free Gemini API key before running a live diagnostic. Add one below, or try Demo Mode instead."); return; }
+  state.isDemo = false;
+  state.screen = "loadingQuiz";
+  render();
+  try{
+    const quiz = await callGemini(diagnosticPrompt(topic));
+    if(!quiz?.questions?.length) throw {code:"SHAPE", message:"Unexpected response shape from Gemini."};
+    state.quiz = quiz;
+    state.quizAnswers = new Array(quiz.questions.length).fill(null);
+    state.quizIndex = 0;
+    state.screen = "quiz";
+    render();
+  }catch(err){
+    renderErrorScreen(err, "Couldn't build the diagnostic quiz.", startDiagnostic);
+  }
+}
+
+function renderErrorScreen(err, title, retryFn){
+  app.innerHTML = `
+    <div class="screen">
+      <h1 class="hero" style="font-size:28px;">${title}</h1>
+      <div class="error-box">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0; margin-top:1px;"><circle cx="12" cy="12" r="10"/><path d="M12 8v5M12 16h.01"/></svg>
+        <div><strong>${err?.code || "Error"}:</strong> ${err?.message || "Something went wrong."}</div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="retryBtn">Retry</button>
+        <button class="btn btn-ghost" id="backSetupBtn">Back to setup</button>
+      </div>
+    </div>`;
+  document.getElementById("retryBtn").addEventListener("click", retryFn);
+  document.getElementById("backSetupBtn").addEventListener("click", ()=>{ state.screen="setup"; render(); });
+}
+
+function renderQuiz(){
+  const q = state.quiz.questions[state.quizIndex];
+  const total = state.quiz.questions.length;
+  const picked = state.quizAnswers[state.quizIndex];
+  const answered = picked !== null && picked !== undefined;
+
+  app.innerHTML = `
+    <div class="screen">
+      <div class="quiz-progress">
+        <div class="quiz-progress-bar"><div class="quiz-progress-fill" style="width:${((state.quizIndex)/total)*100}%"></div></div>
+        <div class="quiz-progress-label">${state.quizIndex+1} / ${total}</div>
+      </div>
+      <div class="q-tag mono">${q.subConcept}</div>
+      <div class="q-text">${escapeHtml(q.question)}</div>
+      <div class="options" id="optionsWrap">
+        ${q.options.map((opt,i)=>`
+          <button class="option" data-idx="${i}">
+            <span class="option-letter">${String.fromCharCode(65+i)}</span>
+            <span>${escapeHtml(opt)}</span>
+          </button>`).join("")}
+      </div>
+      <div id="explainSlot"></div>
+      <div class="btn-row" id="quizNavRow" style="display:${answered?'flex':'none'}">
+        <button class="btn btn-primary" id="nextQBtn">${state.quizIndex < total-1 ? "Next question →" : "See my results →"}</button>
+      </div>
+    </div>`;
+
+  if(answered) markAnswered();
+
+  document.querySelectorAll(".option").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      if(state.quizAnswers[state.quizIndex] !== null && state.quizAnswers[state.quizIndex] !== undefined) return;
+      const idx = parseInt(btn.dataset.idx);
+      state.quizAnswers[state.quizIndex] = idx;
+      markAnswered();
+      document.getElementById("quizNavRow").style.display = "flex";
+    });
+  });
+
+  function markAnswered(){
+    const p = state.quizAnswers[state.quizIndex];
+    document.querySelectorAll(".option").forEach((btn,i)=>{
+      btn.classList.remove("selected");
+      if(i === q.correctIndex) btn.classList.add("correct");
+      else if(i === p) btn.classList.add("incorrect");
+    });
+    document.getElementById("explainSlot").innerHTML = `<div class="explain-box"><strong>${p===q.correctIndex?"Correct.":"Not quite."}</strong> ${escapeHtml(q.explanation)}</div>`;
+  }
+
+  const nextBtn = document.getElementById("nextQBtn");
+  if(nextBtn){
+    nextBtn.addEventListener("click", async ()=>{
+      if(state.quizIndex < total-1){
+        state.quizIndex++;
+        render();
+      }else{
+        await finishQuiz();
+      }
+    });
+  }
+}
+
+async function finishQuiz(){
+  state.screen = "loadingGaps";
+  render();
+  try{
+    let gaps = computeGaps(state.quiz.questions, state.quizAnswers);
+    const allWrong = gaps.flatMap(g=>g.wrongItems);
+    if(allWrong.length > 0){
+      try{
+        const cls = await callGemini(classifyPrompt(state.topic, allWrong));
+        (cls.classifications||[]).forEach(c=>{
+          const g = gaps.find(g=>g.subConcept === c.subConcept);
+          if(g){ g.errorType = c.errorType; g.prerequisiteMissing = c.prerequisiteMissing; }
+        });
+      }catch(e){ /* classification is a nice-to-have; continue without it */ }
+    }
+    state.gaps = gaps;
+    recordGaps(state.topic, gaps);
+    state.screen = "gapmap";
+    render();
+  }catch(err){
+    renderErrorScreen(err, "Couldn't score your results.", finishQuiz);
+  }
+}
+
+function masteryTier(pct){ return pct >= 80 ? "high" : pct >= 40 ? "mid" : "low"; }
+
+function renderGapMap(){
+  const overall = Math.round(state.gaps.reduce((a,g)=>a+g.mastery,0)/state.gaps.length);
+  const masteredCount = state.gaps.filter(g=>g.mastery>=80).length;
+
+  app.innerHTML = `
+    <div class="screen">
+      <div class="mastery-summary">
+        <div class="mastery-topic mono">${escapeHtml(state.topic)}</div>
+        <div class="mastery-big">${overall}<span>% mastery</span></div>
+        <div class="mastery-caption">${masteredCount} of ${state.gaps.length} sub-concepts mastered</div>
+      </div>
+      <div class="gap-list">
+        ${state.gaps.map((g,i)=>{
+          const tier = masteryTier(g.mastery);
+          return `
+          <div class="gap-card">
+            <div class="gap-head">
+              <div class="gap-name"><span class="gap-dot ${tier}"></span>${escapeHtml(g.subConcept)}</div>
+              <div class="gap-pct mono">${g.mastery}%</div>
+            </div>
+            <div class="gap-bar"><div class="gap-bar-fill ${tier}" style="width:${g.mastery}%"></div></div>
+            <div class="gap-meta">${g.correct}/${g.total} correct${g.errorType ? " · " + g.errorType : ""}</div>
+            <div class="gap-actions">
+              <button class="btn btn-primary btn-sm" data-lesson="${i}">Learn</button>
+              <button class="btn btn-ghost btn-sm" data-practice="${i}">Practice</button>
+            </div>
+          </div>`;
+        }).join("")}
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-ghost" id="restartBtn">Diagnose another topic</button>
+        <button class="btn btn-ghost" id="dashBtn">View dashboard</button>
+      </div>
+    </div>`;
+
+  document.querySelectorAll("[data-lesson]").forEach(btn=>{
+    btn.addEventListener("click", ()=> openLesson(state.gaps[parseInt(btn.dataset.lesson)]));
+  });
+  document.querySelectorAll("[data-practice]").forEach(btn=>{
+    btn.addEventListener("click", ()=> openPractice(state.gaps[parseInt(btn.dataset.practice)]));
+  });
+  document.getElementById("restartBtn").addEventListener("click", ()=>{ state.screen="setup"; render(); });
+  document.getElementById("dashBtn").addEventListener("click", ()=>{ state.screen="dashboard"; render(); });
+}
+
+async function openLesson(gap){
+  state.activeConcept = gap;
+  if(state.isDemo && gap.subConcept.startsWith("1NF")){
+    state.lesson = DEMO_LESSON;
+    state.screen = "lesson";
+    render();
+    return;
+  }
+  if(!getKey()){ openSettingsModal("Add a free Gemini API key to generate a live micro-lesson, or explore Demo Mode from the home screen."); return; }
+  state.screen = "loadingLesson";
+  render();
+  try{
+    const lesson = await callGemini(lessonPrompt(state.topic, gap.subConcept));
+    state.lesson = lesson;
+    state.screen = "lesson";
+    render();
+  }catch(err){
+    renderErrorScreen(err, "Couldn't generate this lesson.", ()=>openLesson(gap));
+  }
+}
+
+function renderLesson(){
+  const g = state.activeConcept;
+  const l = state.lesson;
+  app.innerHTML = `
+    <div class="screen">
+      <div class="lesson-kicker mono">MICRO-LESSON · ${escapeHtml(g.subConcept)}</div>
+      <h2 class="lesson-title">Let's close this gap.</h2>
+
+      <div class="lesson-block">
+        <div class="lesson-analogy">${escapeHtml(l.analogy)}</div>
+      </div>
+      <div class="lesson-block">
+        <div class="lesson-block-label">Explanation</div>
+        <div class="lesson-block-body">${escapeHtml(l.explanation)}</div>
+      </div>
+      <div class="lesson-block">
+        <div class="lesson-block-label">Worked example</div>
+        <div class="lesson-block-body mono" style="white-space:pre-wrap; font-size:13.5px;">${escapeHtml(l.workedExample)}</div>
+      </div>
+      <div class="lesson-block">
+        <div class="lesson-block-label">Common trap</div>
+        <div class="lesson-trap">${escapeHtml(l.commonTrap)}</div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" id="toPracticeBtn">Practice this now →</button>
+        <button class="btn btn-ghost" id="backGapBtn">Back to gap map</button>
+      </div>
+    </div>`;
+  document.getElementById("toPracticeBtn").addEventListener("click", ()=> openPractice(g));
+  document.getElementById("backGapBtn").addEventListener("click", ()=>{ state.screen="gapmap"; render(); });
+}
+
+async function openPractice(gap){
+  state.activeConcept = gap;
+  if(state.isDemo){
+    state.practiceQuiz = { questions: [
+      { id:"dp1", subConcept:gap.subConcept, question:`Demo practice question for "${gap.subConcept}" — pick the answer that keeps every column atomic.`, options:["Split repeating values into a related table","Add more comma-separated values","Merge two tables into one wide table","Ignore the repeating group"], correctIndex:0, explanation:"Splitting repeating values into a related table is exactly how you restore atomicity." }
+    ]};
+    state.practiceAnswers = [null];
+    state.practiceIndex = 0;
+    state.screen = "practice";
+    render();
+    return;
+  }
+  if(!getKey()){ openSettingsModal("Add a free Gemini API key to generate live practice questions, or explore Demo Mode from the home screen."); return; }
+  state.screen = "loadingPractice";
+  render();
+  try{
+    const pq = await callGemini(practicePrompt(state.topic, gap.subConcept));
+    state.practiceQuiz = pq;
+    state.practiceAnswers = new Array(pq.questions.length).fill(null);
+    state.practiceIndex = 0;
+    state.screen = "practice";
+    render();
+  }catch(err){
+    renderErrorScreen(err, "Couldn't generate practice questions.", ()=>openPractice(gap));
+  }
+}
+
+function renderPractice(){
+  const q = state.practiceQuiz.questions[state.practiceIndex];
+  const total = state.practiceQuiz.questions.length;
+  const picked = state.practiceAnswers[state.practiceIndex];
+  const answered = picked !== null && picked !== undefined;
+
+  app.innerHTML = `
+    <div class="screen">
+      <div class="quiz-progress">
+        <div class="quiz-progress-bar"><div class="quiz-progress-fill" style="width:${(state.practiceIndex/total)*100}%; background:var(--mint);"></div></div>
+        <div class="quiz-progress-label">Practice ${state.practiceIndex+1} / ${total}</div>
+      </div>
+      <div class="q-tag mono">${escapeHtml(q.subConcept)}</div>
+      <div class="q-text">${escapeHtml(q.question)}</div>
+      <div class="options" id="optionsWrap">
+        ${q.options.map((opt,i)=>`
+          <button class="option" data-idx="${i}">
+            <span class="option-letter">${String.fromCharCode(65+i)}</span>
+            <span>${escapeHtml(opt)}</span>
+          </button>`).join("")}
+      </div>
+      <div id="explainSlot"></div>
+      <div class="btn-row" id="pracNavRow" style="display:${answered?'flex':'none'}">
+        <button class="btn btn-primary" id="nextPBtn">${state.practiceIndex < total-1 ? "Next question →" : "Finish practice →"}</button>
+      </div>
+    </div>`;
+
+  if(answered) markAnswered();
+
+  document.querySelectorAll(".option").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      if(state.practiceAnswers[state.practiceIndex] !== null && state.practiceAnswers[state.practiceIndex] !== undefined) return;
+      state.practiceAnswers[state.practiceIndex] = parseInt(btn.dataset.idx);
+      markAnswered();
+      document.getElementById("pracNavRow").style.display = "flex";
+    });
+  });
+
+  function markAnswered(){
+    const p = state.practiceAnswers[state.practiceIndex];
+    document.querySelectorAll(".option").forEach((btn,i)=>{
+      if(i === q.correctIndex) btn.classList.add("correct");
+      else if(i === p) btn.classList.add("incorrect");
+    });
+    document.getElementById("explainSlot").innerHTML = `<div class="explain-box"><strong>${p===q.correctIndex?"Correct.":"Not quite."}</strong> ${escapeHtml(q.explanation)}</div>`;
+  }
+
+  const nextBtn = document.getElementById("nextPBtn");
+  if(nextBtn){
+    nextBtn.addEventListener("click", ()=>{
+      if(state.practiceIndex < total-1){ state.practiceIndex++; render(); }
+      else{ finishPractice(); }
+    });
+  }
+}
+
+function finishPractice(){
+  const qs = state.practiceQuiz.questions;
+  const correctCount = qs.filter((q,i)=>state.practiceAnswers[i]===q.correctIndex).length;
+  const gap = state.gaps.find(g=>g.subConcept === state.activeConcept.subConcept);
+  if(gap){
+    const boost = Math.round((correctCount/qs.length) * 30);
+    gap.mastery = Math.min(100, gap.mastery + boost);
+    recordGaps(state.topic, state.gaps);
+  }
+  state.lastPracticeScore = { correct: correctCount, total: qs.length, gap };
+  state.screen = "practiceResult";
+  render();
+  if(gap && gap.mastery >= 80) launchConfetti();
+}
+
+function renderPracticeResult(){
+  const r = state.lastPracticeScore;
+  const justMastered = r.gap && r.gap.mastery >= 80;
+  app.innerHTML = `
+    <div class="screen">
+      <div class="mastery-summary" style="border-bottom:none;">
+        <div class="mastery-topic mono">${escapeHtml(r.gap ? r.gap.subConcept : "")}</div>
+        <div style="font-size:38px; margin:14px 0 6px;">${justMastered ? "🏆" : "📈"}</div>
+        <div class="lesson-title" style="font-size:26px; margin-bottom:8px;">${justMastered ? "Gap closed." : "Good effort."}</div>
+        <div class="mastery-caption">You got ${r.correct} out of ${r.total} correct on ${r.gap ? escapeHtml(r.gap.subConcept) : "this practice"}</div>
+      </div>
+      ${r.gap ? `
+      <div class="panel" style="padding:24px; margin-bottom:24px;">
+        <div class="field-label">Updated mastery</div>
+        <div class="gap-bar" style="height:8px; margin-bottom:8px;"><div class="gap-bar-fill ${masteryTier(r.gap.mastery)}" style="width:${r.gap.mastery}%"></div></div>
+        <div class="mono" style="text-align:center; font-size:20px; color:var(--amber);">${r.gap.mastery}/100</div>
+      </div>` : ``}
+      <div class="btn-row">
+        <button class="btn btn-ghost" id="retryPBtn">Try again</button>
+        <button class="btn btn-primary" id="backGapBtn2">Back to gap map →</button>
+      </div>
+    </div>`;
+  document.getElementById("retryPBtn").addEventListener("click", ()=> openPractice(r.gap));
+  document.getElementById("backGapBtn2").addEventListener("click", ()=>{ state.screen="gapmap"; render(); });
+}
+
+function renderDashboard(){
+  const p = loadProgress();
+  const topics = Object.entries(p.topics);
+  const totalTopics = topics.length;
+  const avgMastery = totalTopics ? Math.round(topics.reduce((a,[,t])=>a+t.overall,0)/totalTopics) : 0;
+  const totalGapsClosed = topics.reduce((a,[,t])=>a + t.gaps.filter(g=>g.mastery>=80).length, 0);
+
+  app.innerHTML = `
+    <div class="screen">
+      <h1 class="hero" style="font-size:32px;">Your progress.</h1>
+      <div class="dash-grid">
+        <div class="dash-stat"><div class="dash-stat-num">${totalTopics}</div><div class="dash-stat-label">Topics diagnosed</div></div>
+        <div class="dash-stat"><div class="dash-stat-num">${avgMastery}%</div><div class="dash-stat-label">Average mastery</div></div>
+        <div class="dash-stat"><div class="dash-stat-num">${totalGapsClosed}</div><div class="dash-stat-label">Gaps closed</div></div>
+      </div>
+      <div class="gap-list">
+        ${topics.length === 0 ? `<div style="color:var(--ink-faint); font-size:14px;">No topics diagnosed yet.</div>` : topics.map(([topic,t])=>`
+          <div class="gap-card">
+            <div class="gap-head">
+              <div class="gap-name">${escapeHtml(topic)}</div>
+              <div class="gap-pct mono">${t.overall}%</div>
+            </div>
+            <div class="gap-bar"><div class="gap-bar-fill ${masteryTier(t.overall)}" style="width:${t.overall}%"></div></div>
+            <div class="gap-meta">${t.gaps.length} sub-concepts · updated ${new Date(t.updatedAt).toLocaleDateString()}</div>
+          </div>
+        `).join("")}
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="newTopicBtn">Diagnose a new topic →</button>
+      </div>
+    </div>`;
+  document.getElementById("newTopicBtn").addEventListener("click", ()=>{ state.screen="setup"; render(); });
+}
+
+/* ---------------- settings modal ---------------- */
+function openSettingsModal(message){
+  const existing = document.getElementById("settingsModal");
+  if(existing) existing.remove();
+  const wrap = document.createElement("div");
+  wrap.className = "modal-backdrop";
+  wrap.id = "settingsModal";
+  wrap.innerHTML = `
+    <div class="modal">
+      <h3>Gemini API key</h3>
+      <p>${message || "GapTutor uses Google's free Gemini API to generate quizzes and lessons."} Get a free key at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com</a> — no credit card needed. It's stored only in your browser.</p>
+      <label class="field-label" for="keyInput">API key</label>
+      <input type="password" id="keyInput" placeholder="AIzaSy…" value="${getKey()}" />
+      <div class="btn-row">
+        <button class="btn btn-primary btn-block" id="saveKeyBtn">Save key</button>
+      </div>
+      <div class="btn-row" style="margin-top:6px;">
+        <button class="btn btn-ghost btn-block" id="closeModalBtn">Close</button>
+      </div>
+    </div>`;
+  document.body.appendChild(wrap);
+  document.getElementById("saveKeyBtn").addEventListener("click", ()=>{
+    const v = document.getElementById("keyInput").value.trim();
+    if(v) setKey(v);
+    wrap.remove();
+  });
+  document.getElementById("closeModalBtn").addEventListener("click", ()=> wrap.remove());
+  wrap.addEventListener("click", (e)=>{ if(e.target===wrap) wrap.remove(); });
+}
+
+settingsBtn.addEventListener("click", ()=> openSettingsModal());
+navDashboard.addEventListener("click", (e)=>{ e.preventDefault(); state.screen="dashboard"; render(); });
+
+/* ---------------- confetti ---------------- */
+function launchConfetti(){
+  const colors = ["#f5a623","#34d6a8","#ef5b5b","#e9edf5"];
+  for(let i=0;i<40;i++){
+    const el = document.createElement("div");
+    el.className = "confetti-piece";
+    const size = 6 + Math.random()*6;
+    el.style.width = size+"px";
+    el.style.height = (size*0.4)+"px";
+    el.style.left = Math.random()*100+"vw";
+    el.style.background = colors[Math.floor(Math.random()*colors.length)];
+    el.style.transform = `rotate(${Math.random()*360}deg)`;
+    document.body.appendChild(el);
+    const duration = 1800 + Math.random()*1400;
+    el.animate([
+      { transform: el.style.transform, top: "-10px", opacity:1 },
+      { transform: `translateY(100vh) rotate(${Math.random()*720}deg)`, opacity:0.9 }
+    ], { duration, easing:"cubic-bezier(.2,.6,.4,1)" });
+    setTimeout(()=> el.remove(), duration+50);
+  }
+}
+
+/* ---------------- utils ---------------- */
+function escapeHtml(str){
+  if(str===null || str===undefined) return "";
+  return String(str).replace(/[&<>"']/g, m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+}
+
+/* ---------------- init ---------------- */
+render();
+</script>
+</body>
+</html>
